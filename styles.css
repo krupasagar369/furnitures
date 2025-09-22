@@ -436,6 +436,77 @@ html {
     color: var(--light-text);
     line-height: 1.6;
 }
+/* Contact Section Styles */
+.contact-section {
+    background: var(--cream);
+    position: relative;
+}
+
+.contact-form-container {
+    background: var(--white);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    height: 100%;
+}
+
+.form-title {
+    color: var(--primary-brown);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.contact-form .form-label {
+    color: var(--dark-text);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.contact-form .form-control {
+    border: 2px solid #E5E5E5;
+    border-radius: 10px;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #FAFAFA;
+}
+
+.contact-form .form-control:focus {
+    border-color: var(--primary-brown);
+    box-shadow: 0 0 0 0.25rem rgba(107, 78, 61, 0.1);
+    background: var(--white);
+}
+
+.contact-form .form-control::placeholder {
+    color: #999;
+    font-size: 0.95rem;
+}
+
+.contact-form textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.contact-form .btn-primary {
+    background: var(--primary-brown);
+    border: none;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.contact-form .btn-primary:hover {
+    background: var(--secondary-brown);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(107, 78, 61, 0.3);
+}
+
 /* Contact Information */
 .contact-info {
     padding-left: 2rem;
@@ -1063,3 +1134,4 @@ html {
     box-shadow: var(--shadow-hover);
 
 }
+
