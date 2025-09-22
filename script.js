@@ -436,4 +436,315 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Console message for developers
 console.log('%c🏡 Luxe Living Website', 'font-size: 20px; color: #6B4E3D; font-weight: bold;');
+
 console.log('%cBuilt with modern web technologies for optimal performance and user experience.', 'color: #8B6F47;');
+// Contact Form Handling
+document.addEventListener('DOMContentLoaded', function() {
+    setupContactForm();
+    setupFormValidation();
+});
+
+// Initialize contact form
+function setupContactForm() {
+    const contactForm = document.getElementById('contactForm');
+    
+    if (contactForm) {
+        contactForm.addEventListener('submit', handleFormSubmission);
+        
+        // Add real-time validation
+        const inputs = contactForm.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('blur', validateField);
+            input.addEventListener('input', clearValidation);
+        });
+    }
+}
+
+// Handle form submission
+async function handleFormSubmission(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const formData = new FormData(form);
+    
+    // Validate all fields
+    if (!validateForm(form)) {
+        return;
+    }
+    
+    // Show loading state
+    showLoadingState(submitBtn);
+    
+    try {
+        // Prepare email data
+        const emailData = {
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            project: formData.get('project')
+        };
+        
+        // Send email using EmailJS or your preferred service
+        await sendContactEmail(emailData);
+        
+        // Show success message
+        showSuccessMessage(form);
+        
+        // Reset form
+        form.reset();
+        
+    } catch (error) {
+        console.error('Error sending email:', error);
+        showErrorMessage(form, 'Sorry, there was an error sending your message. Please try again or contact us directly.');
+    } finally {
+        hideLoadingState(submitBtn);
+    }
+}
+
+// Send email using EmailJS (you'll need to set this up)
+async function sendContactEmail(data) {
+    const response = await fetch('https://formspree.io/f/YOUR_FORM_ID', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: data.email,
+            name: `${data.firstName} ${data.lastName}`,
+            phone: data.phone,
+            message: `New consultation request from ${data.firstName} ${data.lastName}\n\nEmail: ${data.email}\nPhone: ${data.phone}\n\nProject Details:\n${data.project}`,
+            _replyto: data.email,
+            _subject: 'New Consultation Request - Luxe Living'
+        })
+    });
+    
+    if (!response.ok) {
+        throw new Error('Failed to send email');
+    }
+    
+    return response.json();
+}
+
+// Form validation
+function validateForm(form) {
+    const inputs = form.querySelectorAll('input[required], textarea[required]');
+    let isValid = true;
+    
+    inputs.forEach(input => {
+        if (!validateField({ target: input })) {
+            isValid = false;
+        }
+    });
+    
+    return isValid;
+}
+
+// Validate individual field
+function validateField(e) {
+    const field = e.target;
+    const value = field.value.trim();
+    const fieldType = field.type;
+    let isValid = true;
+    let message = '';
+    
+    // Remove existing validation classes
+    field.classList.remove('is-valid', 'is-invalid');
+    removeValidationMessage(field);
+    
+    // Check if required field is empty
+    if (field.hasAttribute('required') && !value) {
+        isValid = false;
+        message = 'This field is required.';
+    }
+    // Email validation
+    else if (fieldType === 'email' && value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+            isValid = false;
+            message = 'Please enter a valid email address.';
+        }
+    }
+    // Phone validation (Indian standard)
+    else if (fieldType === 'tel' && value) {
+        const phoneRegex = /^(\+91[\-\s]?|91[\-\s]?|0)?[6-9]\d{9}$/;
+        const cleanPhone = value.replace(/[\s\-\(\)]/g, '');
+        if (!phoneRegex.test(cleanPhone)) {
+            isValid = false;
+            message = 'Please enter a valid Indian phone number.';
+        }
+    }
+    // Name validation
+    else if ((field.name === 'firstName' || field.name === 'lastName') && value) {
+        if (value.length < 2) {
+            isValid = false;
+            message = 'Name must be at least 2 characters long.';
+        }
+    }
+    // Project description validation
+    else if (field.name === 'project' && value) {
+        if (value.length < 10) {
+            isValid = false;
+            message = 'Please provide more details about your project.';
+        }
+    }
+    
+    // Apply validation classes and messages
+    if (isValid && value) {
+        field.classList.add('is-valid');
+    } else if (!isValid) {
+        field.classList.add('is-invalid');
+        showValidationMessage(field, message);
+    }
+    
+    return isValid;
+}
+
+// Clear validation on input
+function clearValidation(e) {
+    const field = e.target;
+    field.classList.remove('is-valid', 'is-invalid');
+    removeValidationMessage(field);
+}
+
+// Show validation message
+function showValidationMessage(field, message) {
+    removeValidationMessage(field); // Remove any existing message
+    
+    const feedback = document.createElement('div');
+    feedback.className = 'invalid-feedback';
+    feedback.textContent = message;
+    
+    field.parentNode.appendChild(feedback);
+}
+
+// Remove validation message
+function removeValidationMessage(field) {
+    const existingFeedback = field.parentNode.querySelector('.invalid-feedback, .valid-feedback');
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+}
+
+// Show loading state
+function showLoadingState(button) {
+    button.classList.add('loading');
+    button.disabled = true;
+    button.setAttribute('data-original-text', button.textContent);
+    button.textContent = 'Sending...';
+}
+
+// Hide loading state
+function hideLoadingState(button) {
+    button.classList.remove('loading');
+    button.disabled = false;
+    button.textContent = button.getAttribute('data-original-text') || 'Schedule Free Consultation';
+}
+
+// Show success message
+function showSuccessMessage(form) {
+    removeFormMessages(form);
+    
+    const successDiv = document.createElement('div');
+    successDiv.className = 'form-success-message';
+    successDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>Thank you!</strong> Your consultation request has been sent successfully. 
+        We'll contact you within 24 hours to schedule your free consultation.
+    `;
+    
+    form.insertBefore(successDiv, form.firstChild);
+    
+    // Scroll to success message
+    successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (successDiv.parentNode) {
+            successDiv.remove();
+        }
+    }, 10000);
+}
+
+// Show error message
+function showErrorMessage(form, message) {
+    removeFormMessages(form);
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'form-error-message';
+    errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Error:</strong> ${message}
+    `;
+    
+    form.insertBefore(errorDiv, form.firstChild);
+    
+    // Scroll to error message
+    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Remove form messages
+function removeFormMessages(form) {
+    const messages = form.querySelectorAll('.form-success-message, .form-error-message');
+    messages.forEach(msg => msg.remove());
+}
+
+// Setup form validation with better UX
+function setupFormValidation() {
+    const form = document.getElementById('contactForm');
+    if (!form) return;
+    
+    // Add character counter for project description
+    const projectTextarea = document.getElementById('project');
+    if (projectTextarea) {
+        addCharacterCounter(projectTextarea);
+    }
+    
+    // Add input formatting for Indian numbers
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', formatIndianPhoneNumber);
+    }
+}
+
+// Add character counter
+function addCharacterCounter(textarea) {
+    const counter = document.createElement('small');
+    counter.className = 'form-text text-muted text-end';
+    counter.style.display = 'block';
+    
+    const updateCounter = () => {
+        const length = textarea.value.length;
+        const minLength = 10;
+        counter.textContent = `${length}/500 characters`;
+        
+        if (length < minLength) {
+            counter.textContent += ` (minimum ${minLength} characters)`;
+            counter.className = 'form-text text-warning text-end';
+        } else {
+            counter.className = 'form-text text-muted text-end';
+        }
+    };
+    
+    textarea.addEventListener('input', updateCounter);
+    textarea.parentNode.appendChild(counter);
+    updateCounter();
+}
+
+// Format Indian phone number
+function formatIndianPhoneNumber(e) {
+    const input = e.target;
+    const value = input.value.replace(/\D/g, '');
+    let formattedValue = value;
+    
+    if (value.startsWith("91") && value.length > 2) {
+        formattedValue = `+91 ${value.slice(2, 7)}-${value.slice(7, 12)}`;
+    } else if (value.length === 10) {
+        formattedValue = `${value.slice(0, 5)}-${value.slice(5, 10)}`;
+    }
+    
+    input.value = formattedValue;
+}
+
+console.log('📧 Contact form initialized with Indian phone validation');
